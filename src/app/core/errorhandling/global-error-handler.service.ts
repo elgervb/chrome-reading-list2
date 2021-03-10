@@ -23,12 +23,20 @@ export class GlobalErrorHandler extends ErrorHandler {
       }
       // Http Error
       // Send the error to the server
-      gaService.sendEvent('error', error.message, JSON.stringify(error));
+      try {
+        gaService.sendEvent('error', error.message, JSON.stringify(error));
+      } catch {
+        console.dir(error);
+      }
       return;
     } else {
       // Client Error Happend
       // Send the error to the server
-      gaService.sendEvent('error', error.message, JSON.stringify(error));
+      try {
+        gaService.sendEvent('error', error.message, JSON.stringify(error.stack));
+      } catch {
+        console.dir(error);
+      }
     }
   }
 

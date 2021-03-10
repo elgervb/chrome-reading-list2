@@ -18,6 +18,9 @@
     "@angular/platform-browser": "~11.0.8",
     "@angular/platform-browser-dynamic": "~11.0.8",
     "@angular/router": "~11.0.8",
+    "@ngrx/effects": "^11.0.1",
+    "@ngrx/store": "^11.0.1",
+    "@ngrx/store-devtools": "^11.0.1",
     "rxjs": "~6.5.4",
     "tslib": "^2.0.0",
     "zone.js": "~0.10.2"
@@ -28,6 +31,7 @@
     "@angular/compiler-cli": "~11.0.8",
     "@angular/language-service": "~11.0.8",
     "@elgervb/mock-data": "0.0.4",
+    "@ngrx/schematics": "^11.0.1",
     "@types/chrome": "^0.0.128",
     "@types/jest": "^26.0.20",
     "@types/node": "^14.14.20",

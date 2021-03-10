@@ -92,5 +92,8 @@
       }
     }
   },
-  "defaultProject": "chrome-readinglist2"
+  "defaultProject": "chrome-readinglist2",
+  "cli": {
+    "defaultCollection": "@ngrx/schematics"
+  }
 }

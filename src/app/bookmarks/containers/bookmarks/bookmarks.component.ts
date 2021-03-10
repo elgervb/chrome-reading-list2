@@ -7,6 +7,10 @@ import { Sorting } from '../../models/sorting';
 import { environment } from 'src/environments/environment';
 import { GoogleAnalyticsService } from '@core/google-analytics.service';
 
+import { Store } from '@ngrx/store';
+import * as BookmarksActions from '../../actions/bookmarks.actions';
+import * as BookmarksSelectors from '../../selectors/bookmarks.selectors';
+
 const initialSorting: Sorting = {
   field: 'dateAdded',
   asc: true
@@ -43,15 +47,19 @@ export class BookmarksComponent implements OnInit, OnDestroy {
     private analyticsService: GoogleAnalyticsService,
     private bookmarkService: BookmarkService,
     private changeDetector: ChangeDetectorRef,
-    private versionService: VersionService
+    private versionService: VersionService,
+    private store: Store
   ) { }
 
   ngOnInit() {
+    debugger;
     chrome.storage.sync.get('filter', data => data?.filter ? this.filter.next(data.filter) : undefined);
 
     const filter$ = this.filter.asObservable().pipe(debounceTime(200));
 
-    combineLatest([this.bookmarkService.bookmarks$, filter$, this.sorting$])
+    const bookmarks$ = this.store.select(BookmarksSelectors.selectBookmarks);
+
+    combineLatest([bookmarks$, filter$, this.sorting$])
       .pipe(
         tap(([allBookmarks, _, __]) => this.countBookmarks = allBookmarks ? allBookmarks.length : 0),
         map(([allBookmarks, filter, sort]) => {
@@ -68,10 +76,10 @@ export class BookmarksComponent implements OnInit, OnDestroy {
         this.changeDetector.detectChanges();
       });
 
-    this.bookmarkService.load();
+    this.store.dispatch(BookmarksActions.loadBookmarks());
     this.filter.next();
 
-    this.bookmarkService.bookmarks$
+    bookmarks$
       .pipe(
         // can current page be added?
         tap(() => {

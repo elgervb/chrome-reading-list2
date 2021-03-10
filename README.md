@@ -22,3 +22,12 @@ ls -lhk dist/*.zip
 goto Chrome extensions dashboard: https://chrome.google.com/webstore/devconsole
 
 Upload the zip as a new package
+
+
+# NgRX
+
+## generate feature
+
+```
+yarn ng g feature bookmarks/bookmarks --creators --group --module bookmarks --api false --creators tru
+```
