@@ -1,7 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Subject, combineLatest } from 'rxjs';
 import { debounceTime, map, tap, takeUntil } from 'rxjs/operators';
-import { BookmarkService } from '../../services/bookmark/bookmark.service';
 import { VersionService } from '../../services/version/version.service';
 import { Sorting } from '../../models/sorting';
 import { environment } from 'src/environments/environment';
@@ -45,7 +44,6 @@ export class BookmarksComponent implements OnInit, OnDestroy {
 
   constructor(
     private analyticsService: GoogleAnalyticsService,
-    private bookmarkService: BookmarkService,
     private changeDetector: ChangeDetectorRef,
     private versionService: VersionService,
     private store: Store
@@ -55,12 +53,10 @@ export class BookmarksComponent implements OnInit, OnDestroy {
     chrome.storage.sync.get('filter', data => data?.filter ? this.filter.next(data.filter) : undefined);
 
     const filter$ = this.filter.asObservable().pipe(debounceTime(200));
-
     const bookmarks$ = this.store.select(BookmarksSelectors.selectBookmarks);
 
     combineLatest([bookmarks$, filter$, this.sorting$])
       .pipe(
-        tap(([allBookmarks, _, __]) => this.countBookmarks = allBookmarks ? allBookmarks.length : 0),
         map(([allBookmarks, filter, sort]) => {
           if (!allBookmarks) {
             return undefined;
@@ -81,14 +77,14 @@ export class BookmarksComponent implements OnInit, OnDestroy {
     bookmarks$
       .pipe(
         // can current page be added?
-        tap(() => {
+        tap(bookmarks => {
           chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             const tab = tabs[0];
-            this.currentUrlExists = this.bookmarkService.exists(tab.url);
-
+            this.currentUrlExists = bookmarks?.some(bookmark => tab.url === bookmark.url);
             this.changeDetector.detectChanges();
           });
         }),
+        tap(allBookmarks => this.countBookmarks = allBookmarks ? allBookmarks.length : 0),
         tap(bookmarks => chrome.browserAction.setBadgeText({ text: `${bookmarks.length}` })),
         takeUntil(this.destroy$)
       ).subscribe();
