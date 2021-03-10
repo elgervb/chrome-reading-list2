@@ -52,7 +52,6 @@ export class BookmarksComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    debugger;
     chrome.storage.sync.get('filter', data => data?.filter ? this.filter.next(data.filter) : undefined);
 
     const filter$ = this.filter.asObservable().pipe(debounceTime(200));
@@ -68,7 +67,7 @@ export class BookmarksComponent implements OnInit, OnDestroy {
           }
           const bookmarks = filter ? this.filterBookmarks(filter, allBookmarks) : [...allBookmarks];
 
-          return bookmarks.sort((a, b) => this.sortBookmarks(a, b, sort));
+          return [...bookmarks].sort((a, b) => this.compareBookmarks(a, b, sort));
         })
       )
       .subscribe(bookmarks => {
@@ -103,10 +102,13 @@ export class BookmarksComponent implements OnInit, OnDestroy {
   addBookmark() {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const tab = tabs[0];
-      this.bookmarkService.add({
-        url: tab.url,
-        title: tab.title,
-      });
+      this.store.dispatch(BookmarksActions.createBookmark({
+        bookmark: {
+          url: tab.url,
+          title: tab.title,
+        }
+      })
+      )
 
       this.analyticsService.sendEvent('bookmarks', 'add', tab.url);
     });
@@ -162,7 +164,7 @@ export class BookmarksComponent implements OnInit, OnDestroy {
       || bookmark.url.toLowerCase().includes(filter));
   }
 
-  private sortBookmarks(a: chrome.bookmarks.BookmarkTreeNode, b: chrome.bookmarks.BookmarkTreeNode, sort: Sorting) {
+  private compareBookmarks(a: chrome.bookmarks.BookmarkTreeNode, b: chrome.bookmarks.BookmarkTreeNode, sort: Sorting) {
     const right = sort.asc ? a : b;
     const left = sort.asc ? b : a;
     return ('' + right[sort.field]).localeCompare('' + left[sort.field]);

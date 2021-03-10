@@ -11,9 +11,11 @@ export const OTHER_BOOKMARKS = 'Other Bookmarks';
 })
 export class BookmarkService {
 
+  // FIXME: remove use store
   bookmarks$: Observable<chrome.bookmarks.BookmarkTreeNode[]>;
   readingListId: string;
 
+  // FIXME: remove use store
   private bookmarks = new BehaviorSubject<chrome.bookmarks.BookmarkTreeNode[]>([]);
 
   constructor(
@@ -25,19 +27,20 @@ export class BookmarkService {
     this.bookmarks$ = this.bookmarks.asObservable();
   }
 
-  add(create: chrome.bookmarks.BookmarkCreateArg) {
+  create(create: chrome.bookmarks.BookmarkCreateArg): Observable<chrome.bookmarks.BookmarkTreeNode> {
+    const addSubject = new Subject<chrome.bookmarks.BookmarkTreeNode>();
     const bookmarkExists = this.exists(create.url);
-
     if (!bookmarkExists) {
-
       // always put it in the reading list
-      create.parentId = this.readingListId;
+      const createBookmark: chrome.bookmarks.BookmarkCreateArg = { ...create, parentId: this.readingListId };
 
-      chrome.bookmarks.create(create, bookmark => {
-        const copy = [...this.bookmarks.value, bookmark];
-        this.bookmarks.next(copy);
+      chrome.bookmarks.create(createBookmark, bookmark => {
+        addSubject.next(bookmark);
+        addSubject.complete();
       });
     }
+
+    return addSubject.asObservable();
   }
 
   exists(url: string): boolean {

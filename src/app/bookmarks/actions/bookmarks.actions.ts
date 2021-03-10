@@ -1,8 +1,12 @@
 import { createAction, props } from '@ngrx/store';
 
+export const createBookmark = createAction(
+  '[Bookmarks] Create Bookmark',
+  props<{ bookmark: chrome.bookmarks.BookmarkCreateArg }>()
+);
 export const addBookmark = createAction(
   '[Bookmarks] Add Bookmark',
-  props<chrome.bookmarks.BookmarkCreateArg>()
+  props<{ bookmark: chrome.bookmarks.BookmarkTreeNode }>()
 );
 
 export const loadBookmarks = createAction(

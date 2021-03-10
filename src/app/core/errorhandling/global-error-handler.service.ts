@@ -25,7 +25,7 @@ export class GlobalErrorHandler extends ErrorHandler {
       // Send the error to the server
       try {
         gaService.sendEvent('error', error.message, JSON.stringify(error));
-      } catch {
+      } finally {
         console.dir(error);
       }
       return;
@@ -34,7 +34,7 @@ export class GlobalErrorHandler extends ErrorHandler {
       // Send the error to the server
       try {
         gaService.sendEvent('error', error.message, JSON.stringify(error.stack));
-      } catch {
+      } finally {
         console.dir(error);
       }
     }

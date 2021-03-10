@@ -13,8 +13,11 @@ export const initialState: State = {
 
 export const reducer = createReducer(
   initialState,
-  on(BookmarksActions.loadBookmarks, state => (state)),
+  on(BookmarksActions.loadBookmarks, state => state),
+  on(BookmarksActions.loadBookmarksFailure, state => state),
   on(BookmarksActions.loadBookmarksSuccess, (state, action) => ({ ...state, bookmarks: action.bookmarks })),
-  on(BookmarksActions.addBookmark, state => (state)),
+
+  on(BookmarksActions.addBookmark, (state, action) => ({ ...state, bookmarks: [...state.bookmarks, action.bookmark] })),
+
   on(BookmarksActions.removeBookmark, state => (state)),
 );

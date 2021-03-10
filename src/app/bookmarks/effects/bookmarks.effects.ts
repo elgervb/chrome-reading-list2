@@ -23,6 +23,18 @@ export class BookmarksEffects {
     )
   );
 
+  createBookmark$ = createEffect(() => this.actions$
+    .pipe(
+      ofType(BookmarksActions.createBookmark),
+      concatMap(
+        action => this.bookmarkService.create(action.bookmark)
+          .pipe(
+            map(bookmark => BookmarksActions.addBookmark({ bookmark }))
+          )
+      )
+    )
+  );
+
   constructor(
     private actions$: Actions,
     private bookmarkService: BookmarkService
