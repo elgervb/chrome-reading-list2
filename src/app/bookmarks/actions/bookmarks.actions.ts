@@ -23,5 +23,12 @@ export const loadBookmarksFailure = createAction(
 
 export const removeBookmark = createAction(
   '[Bookmarks] Remove Bookmark',
-  props<chrome.bookmarks.BookmarkTreeNode>()
+  props<{ bookmark: chrome.bookmarks.BookmarkTreeNode }>()
+);
+export const removeBookmarkFailure = createAction(
+  '[Bookmarks] Remove Bookmark Failure'
+);
+export const removeBookmarkSuccess = createAction(
+  '[Bookmarks] Remove Bookmark Success',
+  props<{ bookmark: chrome.bookmarks.BookmarkTreeNode }>()
 );

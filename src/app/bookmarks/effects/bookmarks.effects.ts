@@ -35,6 +35,19 @@ export class BookmarksEffects {
     )
   );
 
+  removeBookmark$ = createEffect(() => this.actions$
+    .pipe(
+      ofType(BookmarksActions.removeBookmark),
+      concatMap(
+        action => this.bookmarkService.remove(action.bookmark)
+          .pipe(
+            map(bookmark => BookmarksActions.removeBookmarkSuccess({ bookmark })),
+            catchError(() => of(BookmarksActions.removeBookmarkFailure()))
+          )
+      )
+    )
+  );
+
   constructor(
     private actions$: Actions,
     private bookmarkService: BookmarkService

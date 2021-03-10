@@ -139,7 +139,7 @@ export class BookmarksComponent implements OnInit, OnDestroy {
 
   selectBookmark(bookmark: chrome.bookmarks.BookmarkTreeNode) {
     chrome.tabs.query({ active: true, currentWindow: true }, () => {
-      this.bookmarkService.remove(bookmark);
+      this.store.dispatch(BookmarksActions.removeBookmark({ bookmark }));
       this.analyticsService.sendEvent('bookmarks', 'select', bookmark.url);
       chrome.tabs.create({ url: bookmark.url });
     });

@@ -53,11 +53,14 @@ export class BookmarkService {
     return this.bookmarks$;
   }
 
-  remove(remove: chrome.bookmarks.BookmarkTreeNode) {
+  remove(remove: chrome.bookmarks.BookmarkTreeNode): Observable<chrome.bookmarks.BookmarkTreeNode> {
+    const removeSubject = new Subject<chrome.bookmarks.BookmarkTreeNode>();
     chrome.bookmarks.remove(remove.id, () => {
-      const result = [...this.bookmarks.value].filter(bookmark => bookmark.id !== remove.id);
-      this.bookmarks.next(result);
+      removeSubject.next(remove);
+      removeSubject.complete();
     });
+
+    return removeSubject.asObservable();
   }
 
   select(bookmark: chrome.bookmarks.BookmarkTreeNode) {

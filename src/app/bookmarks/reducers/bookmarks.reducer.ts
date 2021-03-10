@@ -20,4 +20,6 @@ export const reducer = createReducer(
   on(BookmarksActions.addBookmark, (state, action) => ({ ...state, bookmarks: [...state.bookmarks, action.bookmark] })),
 
   on(BookmarksActions.removeBookmark, state => (state)),
+  on(BookmarksActions.removeBookmarkSuccess, (state, action) =>
+    ({ ...state, bookmarks: state.bookmarks.filter(bookmark => bookmark.id !== action.bookmark.id) }))
 );
