@@ -1,7 +1,7 @@
 import * as fromBookmarks from './bookmarks.actions';
 
-describe('loadBookmarkss', () => {
+describe('loadBookmarks', () => {
   it('should return an action', () => {
-    expect(fromBookmarks.loadBookmarkss().type).toBe('[Bookmarks] Load Bookmarkss');
+    expect(fromBookmarks.loadBookmarks().type).toBe('[Bookmarks] Load Bookmarks');
   });
 });

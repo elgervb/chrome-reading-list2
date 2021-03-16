@@ -9,6 +9,7 @@ import { GoogleAnalyticsService } from '@core/google-analytics.service';
 import { Store } from '@ngrx/store';
 import * as BookmarksActions from '../../actions/bookmarks.actions';
 import * as BookmarksSelectors from '../../selectors/bookmarks.selectors';
+import { State } from '../../reducers/bookmarks.reducer';
 
 const initialSorting: Sorting = {
   field: 'dateAdded',
@@ -47,7 +48,7 @@ export class BookmarksComponent implements OnInit, OnDestroy {
     private analyticsService: GoogleAnalyticsService,
     private changeDetector: ChangeDetectorRef,
     private versionService: VersionService,
-    private store: Store
+    private store: Store<State>
   ) { }
 
   ngOnInit() {
@@ -136,7 +137,7 @@ export class BookmarksComponent implements OnInit, OnDestroy {
     });
   }
 
-  selectBookmark(bookmark: chrome.bookmarks.BookmarkTreeNode) {
+  selectBookmark(bookmark: chrome.bookmarks.BookmarkTreeNode): void {
     chrome.tabs.query({ active: true, currentWindow: true }, () => {
       this.store.dispatch(BookmarksActions.removeBookmark({ bookmark }));
       this.analyticsService.sendEvent('bookmarks', 'select', bookmark.url);
