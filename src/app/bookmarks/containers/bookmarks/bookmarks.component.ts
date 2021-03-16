@@ -1,6 +1,6 @@
-import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Subject, combineLatest } from 'rxjs';
-import { debounceTime, map, tap, takeUntil } from 'rxjs/operators';
+import { Component, OnInit, ChangeDetectorRef, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { BehaviorSubject, Subject, combineLatest, Observable } from 'rxjs';
+import { debounceTime, map, tap, takeUntil, take, share, filter } from 'rxjs/operators';
 import { VersionService } from '../../services/version/version.service';
 import { Sorting } from '../../models/sorting';
 import { environment } from 'src/environments/environment';
@@ -20,11 +20,12 @@ const chromeReviewUrl = 'https://chrome.google.com/webstore/detail/chrome-readin
 @Component({
   selector: 'app-bookmarks',
   templateUrl: './bookmarks.component.html',
-  styleUrls: ['./bookmarks.component.css']
+  styleUrls: ['./bookmarks.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BookmarksComponent implements OnInit, OnDestroy {
 
-  bookmarks: chrome.bookmarks.BookmarkTreeNode[];
+  bookmarks$: Observable<chrome.bookmarks.BookmarkTreeNode[]>;
   sorting$ = new BehaviorSubject<Sorting>(initialSorting);
   currentUrlExists = true;
   /** the number of total (unfiltered) bookmarks */
@@ -55,21 +56,18 @@ export class BookmarksComponent implements OnInit, OnDestroy {
     const filter$ = this.filter.asObservable().pipe(debounceTime(200));
     const bookmarks$ = this.store.select(BookmarksSelectors.selectBookmarks);
 
-    combineLatest([bookmarks$, filter$, this.sorting$])
+    this.bookmarks$ = combineLatest([bookmarks$, filter$, this.sorting$])
       .pipe(
-        map(([allBookmarks, filter, sort]) => {
-          if (!allBookmarks) {
-            return undefined;
-          }
-          const bookmarks = filter ? this.filterBookmarks(filter, allBookmarks) : [...allBookmarks];
+        filter(([allBookmarks, _, __]) => !!allBookmarks),
+        map(([allBookmarks, searchTerm, sort]) => {
+          const bookmarks = searchTerm ? this.filterBookmarks(searchTerm, allBookmarks) : [...allBookmarks];
 
           return [...bookmarks].sort((a, b) => this.compareBookmarks(a, b, sort));
-        })
-      )
-      .subscribe(bookmarks => {
-        this.bookmarks = bookmarks;
-        this.changeDetector.detectChanges();
-      });
+        }),
+        share()
+      );
+
+    this.changeDetector.detectChanges();
 
     this.store.dispatch(BookmarksActions.loadBookmarks());
     this.filter.next();
@@ -103,23 +101,28 @@ export class BookmarksComponent implements OnInit, OnDestroy {
           url: tab.url,
           title: tab.title,
         }
-      })
-      )
+      }))
 
       this.analyticsService.sendEvent('bookmarks', 'add', tab.url);
     });
   }
 
-  applyFilter(filter: string) {
-    chrome.storage.sync.set({ filter });
-    this.filter.next(filter);
+  applyFilter(searchTerm: string) {
+    chrome.storage.sync.set({ filter: searchTerm });
+    this.filter.next(searchTerm);
   }
 
   randomBookmark() {
-    const randomIndex = Math.floor(Math.random() * this.bookmarks.length);
-    const bookmark = this.bookmarks[randomIndex];
-    this.selectBookmark(bookmark);
-    this.analyticsService.sendEvent('bookmarks', 'random', bookmark.url);
+    this.store.select(BookmarksSelectors.selectBookmarks)
+      .pipe(
+        take(1),
+        map(bookmarks => {
+          const randomIndex = Math.floor(Math.random() * bookmarks.length);
+          return bookmarks[randomIndex];
+        }),
+        tap(bookmark => this.analyticsService.sendEvent('bookmarks', 'random', bookmark.url)),
+        tap(bookmark => this.selectBookmark(bookmark))
+      ).subscribe()
   }
 
   reviewPopoverShown(show: boolean) {
@@ -154,10 +157,10 @@ export class BookmarksComponent implements OnInit, OnDestroy {
     this.analyticsService.sendEvent('bookmarks', 'sort', `${sorting.field}:${sorting.asc ? 'asc' : 'desc'}`);
   }
 
-  private filterBookmarks(filter: string, bookmarks: chrome.bookmarks.BookmarkTreeNode[]) {
+  private filterBookmarks(searchTerm: string, bookmarks: chrome.bookmarks.BookmarkTreeNode[]) {
     return bookmarks.filter(bookmark =>
-      bookmark.title.toLowerCase().includes(filter)
-      || bookmark.url.toLowerCase().includes(filter));
+      bookmark.title.toLowerCase().includes(searchTerm)
+      || bookmark.url.toLowerCase().includes(searchTerm));
   }
 
   private compareBookmarks(a: chrome.bookmarks.BookmarkTreeNode, b: chrome.bookmarks.BookmarkTreeNode, sort: Sorting) {

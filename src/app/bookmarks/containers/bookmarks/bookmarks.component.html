@@ -1,5 +1,5 @@
 <app-bookmark-header
-  [bookmarks]="bookmarks"
+  [bookmarks]="bookmarks$ | async"
   [currentUrlExists]="currentUrlExists"
   [sorting]="sorting$ | async"
   [version]="version"
@@ -10,14 +10,14 @@
 </app-bookmark-header>
 
 <app-bookmark-list
-  [bookmarks]="bookmarks"
+  [bookmarks]="bookmarks$ | async"
   [countBookmarks]="countBookmarks"
   (clearFilter)="applyFilter('')"
   (selectEvent)="selectBookmark($event)">
 </app-bookmark-list>
 
 <app-bookmark-footer
-  [bookmarks]="bookmarks"
+  [bookmarks]="bookmarks$ | async"
   [filter]="filter | async"
   (filterEvent)="applyFilter($event)"
   (openReviewEvent)="openReview()"
